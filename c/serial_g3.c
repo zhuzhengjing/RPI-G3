@@ -12,13 +12,18 @@
 #define SERIAL_PORT "/dev/ttyAMA0"
 #define PACKAGE_LEN 24
 
+static void dump_package(char *buf, int len);
+
 static void
 handle_package(char *package)
 {
+    printf("-----------------\n");
+    dump_package(package, 24);
+
     // check data package length, should be 20
     int package_length = package[2] * 256 + package[3];
     if (package_length != 20) {
-        printf("RECV data package length error[20, %d]", package_length);
+        printf("RECV data package length error[20, %d]\n", package_length);
         return;
     }
 
@@ -31,7 +36,7 @@ handle_package(char *package)
     crc = crc % (256*256);
     int package_crc = package[22] * 256 + package[23];
     if (package_crc != crc) {
-        printf("data package crc error[%d, %d]", package_crc, crc);
+        printf("data package crc error[%d, %d]\n", package_crc, crc);
         return;
     }
 
@@ -39,22 +44,22 @@ handle_package(char *package)
     int index = 4;
     if (package[0] == 0x42 && package[1] == 0x4d) {
         // PM1.0(CF=1)
-        int pm1_0 = package[index++] * 256 + package[index++];
-        // PM2.5(CF=1)
-        int pm2_5 = package[index++] * 256 + package[index++];
+        int pm1_0 = package[4] * 256 + package[5];
+        index = 6;
+        // PM2.5(CF=1)i
+        int pm2_5 = package[6] * 256 + package[7];
         // PM10(CF=1)
-        int pm10 = package[index++] * 256 + package[index++];
-
-        printf("(CF=1) -> [%d, %d, %d]", pm1_0, pm2_5, pm10);
+        int pm10 = package[8] * 256 + package[9];
+        printf("(CF=1) -> [%d, %d, %d]\n", pm1_0, pm2_5, pm10);
 
         // PM1.0(大气环境下)
-        int pm_air_1_0 = package[index++] * 256 + package[index++];
+        int pm_air_1_0 = package[10] * 256 + package[11];
         // PM2.5(大气环境下)
-        int pm_air_2_5 = package[index++] * 256 + package[index++];
+        int pm_air_2_5 = package[12] * 256 + package[13];
         // PM10(大气环境下)
-        int pm_air_10 = package[index++] * 256 + package[index++];
+        int pm_air_10 = package[14] * 256 + package[15];
 
-        printf("大气环境 -> [%d, %d, %d]", pm_air_1_0, pm_air_2_5, pm_air_10);
+        printf("大气环境 -> [%d, %d, %d]\n", pm_air_1_0, pm_air_2_5, pm_air_10);
 
         // 数据7,8,9保留
     } else {
