@@ -12,15 +12,23 @@ var SerialPort = require("serialport").SerialPort;
 // RPI PWM
 var wpi = require('wiring-pi');
 
+// ---- GPIO ----
+wpi.setup('wpi');
+
+// PWM GPIO1
+var GPIO1 = 1;
+wpi.pinMode(GPIO1, wpi.PWM_OUTPUT);
+wpi.pwmWrite(GPIO1, 0);
+
+// GPIO0
+var GPIO0 = 0;
+wpi.pinMode(GPIO0, wpi.OUTPUT);
+wpi.digitalWrite(GPIO0, 1);
+
+// ---- Serial ----
 var serialPort = new SerialPort(SERIAL_PORT, {
     baudrate: 9600
 });
-
-wpi.setup('wpi');
-
-var pin = 1;
-wpi.pinMode(pin, wpi.PWM_OUTPUT);
-wpi.pwmWrite(pin, 0);
 
 serialPort.on("open", function () {
     console.log(SERIAL_PORT + ' open success');
