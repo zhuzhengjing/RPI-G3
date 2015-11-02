@@ -67,7 +67,10 @@ serial_callback(int fd, char* buf, int len)
 {
     static int package_index = 0;
     static char whole_package[PACKAGE_LEN];
-    printf("RECV data, len = %d\n", len);
+
+    printf("package len = %d\n", len);
+    dump_package(buf, len);
+
     int i;
     for (i = 0; i < len; i++) {
         if (package_index == 0) {
@@ -77,7 +80,7 @@ serial_callback(int fd, char* buf, int len)
         } else if (package_index < PACKAGE_LEN) {
             whole_package[package_index++] = buf[i];
         }
-        
+
         if (package_index == PACKAGE_LEN) {
             handle_package(whole_package);
             package_index = 0;
@@ -86,6 +89,18 @@ serial_callback(int fd, char* buf, int len)
 
     return 0;
 }
+
+static void
+dump_package(char *buf, int len)
+{
+    int i;
+    for (i = 0; i < len; i++) {
+        printf("%x ", buf[i]);
+    }
+
+    printf("\n");
+}
+
 
 static struct serial_helper_t serial = {
     .dev_path = SERIAL_PORT,
