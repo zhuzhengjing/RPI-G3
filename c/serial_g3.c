@@ -67,7 +67,7 @@ serial_callback(int fd, char* buf, int len)
 {
     static int package_index = 0;
     static char whole_package[PACKAGE_LEN];
-
+    printf("RECV data, len = %d\n", len);
     int i;
     for (i = 0; i < len; i++) {
         if (package_index == 0) {
