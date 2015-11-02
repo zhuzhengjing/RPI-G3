@@ -189,9 +189,9 @@ serial_helper_register(struct serial_helper_t* serial)
 	fd = open(serial->dev_path, O_RDWR);
 	if (fd < 0)
 		goto fail1;
-	if (tty_raw(fd, 8) < 0)
+	if (tty_raw(fd, serial->data_bits) < 0)
 		goto fail2;
-	if (tty_set_speed(fd, 115200))
+	if (tty_set_speed(fd, serial->baud_rate))
 		goto fail3;
 
 	serial->fd = fd;
