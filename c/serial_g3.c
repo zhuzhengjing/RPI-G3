@@ -45,7 +45,6 @@ handle_package(char *package)
     if (package[0] == 0x42 && package[1] == 0x4d) {
         // PM1.0(CF=1)
         int pm1_0 = package[4] * 256 + package[5];
-        index = 6;
         // PM2.5(CF=1)i
         int pm2_5 = package[6] * 256 + package[7];
         // PM10(CF=1)
