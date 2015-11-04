@@ -28,7 +28,7 @@ wpi.digitalWrite(GPIO_PM2_5, 1);
 // LCD 1602
 // GPIO7 0 2 3 -> D4 D5 D6 D7
 var lcdInit = function () {
-	var handle = wpi.lcdInit(2, 16, 4,  11,10 , 7,0,2,3,0,0,0,0);
+	var handle = wpi.lcdInit(2, 16, 4,  11,10 , 0,2,3,17,0,0,0,0);
 	if (handle === -1) {
 		console.log('LCD1602 init error');
 		return -1;
