@@ -15,15 +15,38 @@ var wpi = require('wiring-pi');
 // ---- GPIO ----
 wpi.setup('wpi');
 
-// PWM GPIO1
-var GPIO1 = 1;
-wpi.pinMode(GPIO1, wpi.PWM_OUTPUT);
-wpi.pwmWrite(GPIO1, 0);
+// GPIO1: PWM
+var GPIO_PWM = 1;
+wpi.pinMode(GPIO_PWM, wpi.PWM_OUTPUT);
+wpi.pwmWrite(GPIO_PWM, 0);
 
-// GPIO0
-var GPIO0 = 0;
-wpi.pinMode(GPIO0, wpi.OUTPUT);
-wpi.digitalWrite(GPIO0, 1);
+// GPIO_PM2_5: 控制PM2.5传感器打开关闭，1-打开，0-关闭
+var GPIO_PM2_5 = 4;
+wpi.pinMode(GPIO_PM2_5, wpi.OUTPUT);
+wpi.digitalWrite(GPIO_PM2_5, 1);
+
+// LCD 1602
+// GPIO7 0 2 3 -> D4 D5 D6 D7
+var lcdInit = function () {
+	var handle = wpi.lcdInit(2, 16, 4,  11,10 , 7,0,2,3,0,0,0,0);
+	if (handle === -1) {
+		console.log('LCD1602 init error');
+		return -1;
+	} else {
+		console.log('LCD1602 init OK');
+	}
+
+	wpi.lcdHome(handle);
+
+	// 打开LCD
+	wpi.lcdDisplay(handle, 'on');
+
+	wpi.lcdPuts(handle, '  PM2.5 Sensor');
+
+	return handle;
+};
+
+var lcd_handle = lcdInit();
 
 // ---- Serial ----
 var serialPort = new SerialPort(SERIAL_PORT, {
