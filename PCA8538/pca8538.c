@@ -1003,7 +1003,8 @@ int main(void)
     
     PCA8538_read_temperature(&temp);
     printf("%d\n", temp);
-    
+    PCA8538_temperature_show(temp);
+
     close(pca8538_fd);
     return 0;
 }
