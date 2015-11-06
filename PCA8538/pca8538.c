@@ -106,7 +106,7 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
     buf[6] = mask_y;
     buf[7] = 0x20;
     
-    for (int i = 0; i < length; i++) {
+    for (i = 0; i < length; i++) {
         buf[8 + i] = content[i];
     }
 
