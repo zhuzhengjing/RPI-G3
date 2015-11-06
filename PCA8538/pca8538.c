@@ -17,6 +17,8 @@
 #define CLEAR_BIT(A, B)     (A &= ~(1 << B))
 #define SET_BIT(A, B)       (A |= 1 << B)
 
+#define SET_ONE_BIT         0x01
+
 #define SPI_CHAN 0
 
 static int pca8538_fd;
@@ -609,8 +611,8 @@ static void PCA8538_set_symbol(u8 address, u8 flag)
     }
 
     // send
-    if (wiringPiSPIDataRW (SPI_CHAN, buf, sizeof buf) == -1) {
-        printf ("SPI failure: %s\n", strerror(errno));
+    if (wiringPiSPIDataRW(SPI_CHAN, buf, sizeof buf) == -1) {
+        printf("SPI failure: %s\n", strerror(errno));
         return;
     }
 }
@@ -676,77 +678,55 @@ static void PCA8538_set_7seg(u8 index, u8 value)
             buf[9] = 0x01;
             buf[11] = 0x01;
             buf[12] = 0x01;
-            
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
             break;
         case 5:                     // '5'
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
+            buf[8] = 0x01;
+            buf[10] = 0x01;
+            buf[11] = 0x01;
+            buf[12] = 0x01;
+            buf[14] = 0x01;
             break;
         case 6:                     // '6'
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
+            buf[8] = 0x01;
+            buf[10] = 0x01;
+            buf[11] = 0x01;
+            buf[12] = 0x01;
+            buf[13] = 0x01;
+            buf[14] = 0x01;
             break;
         case 7:                     // '7'
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
+            buf[8] = 0x01;
+            buf[9] = 0x01;
+            buf[10] = 0x01;
             break;
         case 8:                     // '8'
             for (i = 0; i < 7; i++)
             {
-                spi_send_byte(0x01);
+                buf[i + 8] = 0x01;
             }
             break;
         case 9:                     // '9'
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
+            buf[8] = 0x01;
+            buf[9] = 0x01;
+            buf[10] = 0x01;
+            buf[11] = 0x01;
+            buf[12] = 0x01;
+            buf[14] = 0x01;
             break;
         case 0x0a:                  // '-'
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
+            buf[12] = 0x01;
             break;
         case 0xff:                  // ' '
-            for (i = 0; i < 7; i++)
-            {
-                spi_send_byte(0x00);
-            }
             break;
         default:
             break;
     }
-    
-    PCA8538_CS_DISABLE();
+
+    // send
+    if (wiringPiSPIDataRW(SPI_CHAN, buf, sizeof buf) == -1) {
+        printf("SPI failure: %s\n", strerror(errno));
+        return;
+    }
 }
 
 /**
@@ -886,123 +866,96 @@ void PCA8538_7seg_number_show(s32 number)
 
 void PCA8538_set_H1_7seg(u8 value)
 {
+    u8 buf[15];
     u8 mask, mask_msb, mask_lsb;
     int i;
-    
+
+    memset(buf, 0x00, sizeof buf);
+
     // H1 @88
     mask     = 88;
-    mask_msb = (0x70 & mask) >> 4;
-    mask_lsb = 0x0f & mask;
-    
-    PCA8538_CS_ENABLE();
-    spi_send_byte(0x20);            // SUBADRESS
-    spi_send_byte(0x80);            // control byte
-    spi_send_byte(0x80 | mask_msb); // Set Data pointer x-MSB
-    spi_send_byte(0x80);            // control byte
-    spi_send_byte(0x90 | mask_lsb); // Set Data pointer x-LSB
-    spi_send_byte(0x80);            // control byte
-    spi_send_byte(0xA1);            // Set Data pointer y = 1
-    spi_send_byte(0x20);            // Write to DDRAM
-    
+    mask_msb = 0x80 | ((0x70 & mask) >> 4);
+    mask_lsb = 0x90 | (0x0f & mask);
+
+    buf[0] = 0x20;          // SUBADRESS
+    buf[1] = 0x80;          // control byte
+    buf[2] = mask_msb;      // Set Data pointer x-MSB
+    buf[3] = 0x80;          // control byte
+    buf[4] = mask_lsb;      // Set Data pointer x-LSB
+    buf[5] = 0x80;          // control byte
+    buf[6] = 0xA1;          // Set Data pointer y = 1
+    buf[7] = 0x20;          // Write to DDRAM
+
     switch (value)
     {
         case 0:
             for (i = 0; i < 5; i++)
             {
-                spi_send_byte(0x01);
+                buf[i + 8] = SET_ONE_BIT;
             }
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
+            buf[14] = SET_ONE_BIT;
             break;
         case 1:
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
+            buf[9] = SET_ONE_BIT;
+            buf[10] = SET_ONE_BIT;
             break;
         case 2:
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
+            buf[8] = SET_ONE_BIT;
+            buf[10] = SET_ONE_BIT;
+            buf[11] = SET_ONE_BIT;
+            buf[13] = SET_ONE_BIT;
+            buf[14] = SET_ONE_BIT;
             break;
         case 3:
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
+            buf[8] = SET_ONE_BIT;
+            buf[9] = SET_ONE_BIT;
+            buf[10] = SET_ONE_BIT;
+            buf[11] = SET_ONE_BIT;
+            buf[13] = SET_ONE_BIT;
             break;
         case 4:
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
+            buf[9] = SET_ONE_BIT;
+            buf[10] = SET_ONE_BIT;
+            buf[12] = SET_ONE_BIT;
+            buf[13] = SET_ONE_BIT;
             break;
         case 5:
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
+            buf[8] = SET_ONE_BIT;
+            buf[9] = SET_ONE_BIT;
+            buf[11] = SET_ONE_BIT;
+            buf[12] = SET_ONE_BIT;
+            buf[13] = SET_ONE_BIT;
             break;
         case 6:
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
+            buf[8] = SET_ONE_BIT;
+            buf[9] = SET_ONE_BIT;
+            buf[11] = SET_ONE_BIT;
+            buf[12] = SET_ONE_BIT;
+            buf[13] = SET_ONE_BIT;
+            buf[14] = SET_ONE_BIT;
             break;
         case 7:
-            spi_send_byte(0x00);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
-            spi_send_byte(0x00);
+            buf[9] = SET_ONE_BIT;
+            buf[10] = SET_ONE_BIT;
+            buf[11] = SET_ONE_BIT;
             break;
         case 8:
             for (i = 0; i < 7; i++)
             {
-                spi_send_byte(0x01);
+                buf[i + 8] = SET_ONE_BIT;
             }
             break;
         case 9:
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x01);
-            spi_send_byte(0x00);
+            for (i = 0; i < 6; i++)
+            {
+                buf[i + 8] = SET_ONE_BIT;
+            }
             break;
         case 0xff:
-            for (i = 0; i < 7; i++)
-            {
-                spi_send_byte(0x00);
-            }
             break;
         default:
             break;
     }
-
-    PCA8538_CS_DISABLE();
 }
 
 /**
@@ -1037,7 +990,6 @@ void PCA8538_set_time(u8 hour, u8 minute, u8 second_flag)
     // display the RAM content in COG
     PCA8538_set_RAM_content(95, 7, &g_PCA8538_RAM_204[95]);
 }
-
 
 int main(void)
 {
