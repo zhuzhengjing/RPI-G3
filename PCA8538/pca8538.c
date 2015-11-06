@@ -14,8 +14,8 @@
 #define u8 unsigned char
 #endif
 
-#define CLEAR_BIT(A, B)     (A &= ~(1 << B))
-#define SET_BIT(A, B)       (A |= 1 << B)
+#define CLEAR_BIT(A, B)     (A &= ~B)
+#define SET_BIT(A, B)       (A |= B)
 
 #define SET_ONE_BIT         0x01
 
