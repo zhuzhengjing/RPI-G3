@@ -149,7 +149,7 @@ static void PCA8538_set_T1_buffer(u8 value)
  *                 1 ----> '1'
  *                 2 ----> ' ' clear display
  */
-static void PCA8538_set_T4_buffer(s8 value)
+static void PCA8538_set_T4_buffer(char value)
 {
     switch (value)
     {
@@ -319,7 +319,7 @@ static void PCA8538_set_T2T3_buffer(u8 index, u8 value)
  * @brief: show centigrade in PCA8538
  *
  */
-void PCA8538_temperature_show(s16 temp)
+void PCA8538_temperature_show(int temp)
 {
     u8 temp_val;
     u8 val[3];
@@ -785,10 +785,10 @@ void PCA8538_symbol_show(PCA8538_symbols_t symbols, u8 flag)
     }
 }
 
-void PCA8538_7seg_number_show(s32 number)
+void PCA8538_7seg_number_show(int number)
 {
     u8  flag = 0;
-    u32 temp;
+    int temp;
     u8  value[6];
     int i;
     
