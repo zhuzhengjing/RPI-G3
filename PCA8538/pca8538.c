@@ -10,6 +10,8 @@
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
 
+#include "pca8538.h"
+
 #ifndef u8
 #define u8 unsigned char
 #endif
