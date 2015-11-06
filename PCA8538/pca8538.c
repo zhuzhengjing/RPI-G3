@@ -47,7 +47,7 @@ void init_PCA8538(void)
     
     char init_buf[] = {0x20, 0x80, 0x3A, 0x80, 0xD8, 0x80, 0x18,
 					   0x80, 0xD4, 0x80, 0xC9, 0x80, 0x45, 0x80, 0x73};
-    
+
     char init_buf2[] = {0xC0, 0x07, 0x80, 0xD0, 0x80, 0xB3, 0x80, 0x39};
     // clear
     memset(g_PCA8538_RAM_204, 0x00, sizeof(g_PCA8538_RAM_204));
@@ -56,15 +56,15 @@ void init_PCA8538(void)
         printf ("SPI failure: %s\n", strerror(errno));
         return;
     }
-    
+
     // delay 60ms
     usleep(1000*60);
-    
-    if (wiringPiSPIDataRW (SPI_CHAN, init_buf, sizeof init_buf) == -1) {
+
+    if (wiringPiSPIDataRW (SPI_CHAN, init_buf2, sizeof init_buf2) == -1) {
         printf ("SPI failure: %s\n", strerror(errno));
         return;
     }
-    
+
     PCA8538_set_RAM_content(0, 204, g_PCA8538_RAM_204);
 }
 
@@ -79,7 +79,7 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
 {
     int i;
     u8 mask_y, mask_msb, mask_lsb;
-    u8 buf[8];
+    u8 *buf;
     
     if (address < 102)
     {
@@ -94,7 +94,9 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
         mask_lsb = 0x90 | (0x0f & address);
         mask_y   = 0xA0 | 0x01;
     }
-    
+
+    buf = (u8 *)malloc(8 + length);
+
     buf[0] = 0x20;
     buf[1] = 0x80;
     buf[2] = mask_msb;
@@ -104,13 +106,15 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
     buf[6] = mask_y;
     buf[7] = 0x20;
     
+    for (int i = 0; i < length; i++) {
+        buf[8 + i] = content[i];
+    }
+
     if (wiringPiSPIDataRW(SPI_CHAN, buf, sizeof buf) == -1) {
         printf ("PCA8538_set_RAM_content SPI failure: %s\n", strerror(errno));
     }
     
-    if (wiringPiSPIDataRW(SPI_CHAN, content, length) == -1) {
-        printf ("PCA8538_set_RAM_content SPI failure: %s\n", strerror(errno));
-    }
+    free(buf);
 }
 
 void PCA8538_read_temperature(u8* temp)
@@ -995,12 +999,17 @@ void PCA8538_set_time(u8 hour, u8 minute, u8 second_flag)
 
 int main(void)
 {
-    u8 temp;
+    u8 temp = 0;
+
     wiringPiSetup();
     spiSetup(1000000);	// 1MHz
-    
+
     init_PCA8538();
-    
+
+    usleep(1000*100);
+
+    PCA8538_set_time(1, 2, 30);
+
     PCA8538_read_temperature(&temp);
     printf("%d\n", temp);
     PCA8538_temperature_show(temp);
