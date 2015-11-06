@@ -22,6 +22,8 @@ static int pca8538_fd;
 // address: 0 - 203
 static u8 g_PCA8538_RAM_204[204];
 
+static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content);
+
 
 void spiSetup (int speed)
 {
