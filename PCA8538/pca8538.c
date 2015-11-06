@@ -149,7 +149,7 @@ static void PCA8538_set_T1_buffer(u8 value)
  *                 1 ----> '1'
  *                 2 ----> ' ' clear display
  */
-static void PCA8538_set_T4_buffer(char value)
+static void PCA8538_set_T4_buffer(int value)
 {
     switch (value)
     {
