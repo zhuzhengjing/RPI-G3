@@ -110,7 +110,6 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
 void PCA8538_read_temperature(u8* temp)
 {
 	char buf[2] = {0xA0, 0xA0};
-    spi_send_byte(0xA0); // SUBADRESS
     wiringPiSPIDataRW(SPI_CHAN, buf, 1);
     *temp = (u8)wiringPiSPIDataRW(SPI_CHAN, buf, 1);
 }
