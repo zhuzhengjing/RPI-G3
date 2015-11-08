@@ -36,12 +36,12 @@ var lcdInit = function () {
 		console.log('LCD1602 init OK');
 	}
 
-	wpi.lcdHome(handle);
-
 	// 打开LCD
-	wpi.lcdDisplay(handle, 'on');
+	wpi.lcdDisplay(handle, 1);
+    wpi.lcdClear(handle);
+    wpi.lcdHome(handle);
 
-	wpi.lcdPuts(handle, '  PM2.5 Sensor');
+	wpi.lcdPuts(handle, 'PM2.5 Sensor');
 
 	return handle;
 };

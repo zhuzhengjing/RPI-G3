@@ -27,7 +27,7 @@ static int pca8538_fd;
 
 // RAM definition
 // address: 0 - 203
-static u8 g_PCA8538_RAM_204[204];
+static volatile u8 g_PCA8538_RAM_204[204];
 
 static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content);
 
@@ -44,28 +44,29 @@ void spiSetup (int speed)
 void init_PCA8538(void)
 {
     int ret = 0;
-    
+ 
     char init_buf[] = {0x20, 0x80, 0x3A, 0x80, 0xD8, 0x80, 0x18,
 					   0x80, 0xD4, 0x80, 0xC9, 0x80, 0x45, 0x80, 0x73};
 
     char init_buf2[] = {0xC0, 0x07, 0x80, 0xD0, 0x80, 0xB3, 0x80, 0x39};
     // clear
-    memset(g_PCA8538_RAM_204, 0x00, sizeof(g_PCA8538_RAM_204));
-    
+    memset((void*)g_PCA8538_RAM_204, 0x00, sizeof(g_PCA8538_RAM_204));
+ 
     if (wiringPiSPIDataRW (SPI_CHAN, init_buf, sizeof init_buf) == -1) {
         printf ("SPI failure: %s\n", strerror(errno));
         return;
     }
 
     // delay 60ms
-    usleep(1000*60);
+    usleep(1000*10);
 
     if (wiringPiSPIDataRW (SPI_CHAN, init_buf2, sizeof init_buf2) == -1) {
         printf ("SPI failure: %s\n", strerror(errno));
         return;
     }
 
-    PCA8538_set_RAM_content(0, 204, g_PCA8538_RAM_204);
+    //memset(g_PCA8538_RAM_204, 0xFF, 204);
+    //PCA8538_set_RAM_content(0, 204, g_PCA8538_RAM_204);
 }
 
 /**
@@ -110,7 +111,7 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
         buf[8 + i] = content[i];
     }
 
-    if (wiringPiSPIDataRW(SPI_CHAN, buf, sizeof buf) == -1) {
+    if (wiringPiSPIDataRW(SPI_CHAN, buf, (8+length)) == -1) {
         printf ("PCA8538_set_RAM_content SPI failure: %s\n", strerror(errno));
     }
     
@@ -119,9 +120,10 @@ static void PCA8538_set_RAM_content(u8 address, u8 length, u8* content)
 
 void PCA8538_read_temperature(u8* temp)
 {
-    char buf[2] = {0xA0, 0xA0};
-    wiringPiSPIDataRW(SPI_CHAN, buf, 1);
-    *temp = (u8)wiringPiSPIDataRW(SPI_CHAN, buf, 1);
+    char buf[2] = {0xA0, 0x00, 0x00};
+    wiringPiSPIDataRW(SPI_CHAN, buf, 3);
+    printf("%d, %d, %d\n", buf[0], buf[1], buf[2]);
+    *temp = buf[1];
 }
 
 /**
@@ -999,21 +1001,23 @@ void PCA8538_set_time(u8 hour, u8 minute, u8 second_flag)
 
 int main(void)
 {
-    u8 temp = 0;
+    u8 temp = 0;  
 
     wiringPiSetup();
-    spiSetup(1000000);	// 1MHz
+    spiSetup(500000);	// 1MHz
 
+    sleep(1);
     init_PCA8538();
 
-    usleep(1000*100);
-
+    sleep(2);
+    for (;;) {
     PCA8538_set_time(1, 2, 30);
 
     PCA8538_read_temperature(&temp);
     printf("%d\n", temp);
     PCA8538_temperature_show(temp);
-
+    sleep(2);
+    }
     close(pca8538_fd);
     return 0;
 }
